@@ -1,54 +1,100 @@
-# React + TypeScript + Vite
+# Firestore Client Test Suite Website
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project serves as a demonstration and test suite website for the [`@serge-ivo/firestore-client`](https://github.com/your-repo/firestore-client) library (v1.5.0). It uses React, Vite, TypeScript, and Firebase to showcase the client's functionality.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- Demonstrates usage of `@serge-ivo/firestore-client` for Firestore operations.
+- Built with Vite for fast development and builds.
+- Written in TypeScript for type safety.
+- Uses React for the user interface.
+- Integrates with Firebase Firestore.
+- Includes basic styling with Tailwind CSS (inferred).
 
-## Expanding the ESLint configuration
+## Prerequisites
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- Node.js (LTS version recommended)
+- npm or yarn
+- A Firebase project set up with Firestore enabled.
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+## Setup
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+1.  **Clone the repository (if you haven't already):**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+    ```bash
+    git clone <your-repository-url>
+    cd firestore-service-website
+    ```
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
+2.  **Install dependencies:**
+
+    ```bash
+    npm install
+    # or
+    # yarn install
+    ```
+
+3.  **Firebase Configuration:**
+    Create a `.env` file in the root directory (`firestore-service-website/.env`) and add your Firebase project configuration keys:
+    ```dotenv
+    VITE_FIREBASE_API_KEY=YOUR_API_KEY
+    VITE_FIREBASE_AUTH_DOMAIN=YOUR_AUTH_DOMAIN
+    VITE_FIREBASE_PROJECT_ID=YOUR_PROJECT_ID
+    VITE_FIREBASE_STORAGE_BUCKET=YOUR_STORAGE_BUCKET
+    VITE_FIREBASE_MESSAGING_SENDER_ID=YOUR_MESSAGING_SENDER_ID
+    VITE_FIREBASE_APP_ID=YOUR_APP_ID
+    VITE_FIREBASE_MEASUREMENT_ID=YOUR_MEASUREMENT_ID # Optional
+    ```
+    Replace `YOUR_...` placeholders with your actual Firebase project credentials. You can find these in your Firebase project settings.
+
+## Available Scripts
+
+- **`npm run dev`**: Runs the app in development mode using Vite. Open [http://localhost:5173](http://localhost:5173) (or the port specified) to view it in the browser. The page will reload if you make edits.
+
+- **`npm run build`**: Builds the app for production to the `dist` folder. It correctly bundles React in production mode and optimizes the build for the best performance.
+
+- **`npm run lint`**: Lints the codebase using ESLint based on the configuration in `eslint.config.js`.
+
+- **`npm run preview`**: Serves the production build locally for previewing.
+
+## Basic Usage (`@serge-ivo/firestore-client`)
+
+The core of the client library revolves around instantiating the `FirestoreService` with your initialized Firebase `db` instance.
+
+```typescript
+// Example: src/firebase.ts (Simplified)
+import { initializeApp } from "firebase/app";
+import { getFirestore, Firestore } from "firebase/firestore";
+import { FirestoreService } from "@serge-ivo/firestore-client";
+
+// Firebase Config (loaded from .env)
+const firebaseConfig = {
+  /* ... */
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db: Firestore = getFirestore(app);
+
+// Create a FirestoreService instance
+const firestoreService = new FirestoreService(db);
+
+// Now use the instance for operations
+async function exampleFetch(docId: string) {
+  try {
+    // Assuming MyDataType is the interface for your document data
+    const data = await firestoreService.getDocument<MyDataType>(
+      `myCollection/${docId}`
+    );
+    if (data) {
+      console.log("Fetched data:", data);
+    } else {
+      console.log("Document not found.");
+    }
+  } catch (error) {
+    console.error("Error fetching document:", error);
+  }
+}
+
+// See components like src/components/FirestoreTest.tsx for more detailed usage.
 ```

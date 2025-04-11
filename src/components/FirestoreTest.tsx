@@ -1,6 +1,9 @@
-import React, { useState, useEffect } from "react";
-import { FirestoreService } from "@serge-ivo/firestore-client";
-import { db } from "../firebase";
+import { limit, orderBy, where } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
+import { firestoreService } from "../firebase";
+
+// Remove module-level instance creation
+// const firestoreService = new FirestoreService(db);
 
 class TestData {
   id?: string;
@@ -21,57 +24,30 @@ class TestData {
 }
 
 const FirestoreTest: React.FC = () => {
+  // Log the db instance just before creating the service
+  console.log("Firestore DB instance in FirestoreTest:", firestoreService);
+
   const [data, setData] = useState<TestData[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [newItem, setNewItem] = useState<TestData>(new TestData());
   const [selectedItem, setSelectedItem] = useState<TestData | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [isInitialized, setIsInitialized] = useState(false);
 
   useEffect(() => {
-    const initializeFirestore = async () => {
-      try {
-        console.log("Initializing FirestoreService with db:", db);
-        FirestoreService.initialize(db);
-        console.log("FirestoreService initialized successfully");
-        setIsInitialized(true);
-        await loadData();
-      } catch (err) {
-        console.error("Error initializing Firestore:", err);
-        setError(
-          err instanceof Error ? err.message : "Failed to initialize Firestore"
-        );
-      }
-    };
-
-    initializeFirestore();
+    loadData();
   }, []);
 
-  const checkInitialized = () => {
-    if (!isInitialized) {
-      console.error("Firestore not initialized yet");
-      setError("Firestore not initialized yet");
-      return false;
-    }
-    return true;
-  };
-
   const loadData = async () => {
-    if (!checkInitialized()) return;
-
     console.log("Loading data from Firestore...");
     setLoading(true);
     setError(null);
     try {
-      const items = await FirestoreService.queryCollection(
-        TestData,
+      // Use the instance
+      const items = await firestoreService.fetchCollection<TestData>(
         "test-collection"
       );
-      console.log(
-        `Loaded ${items.length} items from Firestore:`,
-        items.map((item) => item.toString())
-      );
+      console.log(`Loaded ${items.length} items from Firestore:`, items);
       setData(items);
     } catch (err) {
       console.error("Error loading data:", err);
@@ -82,15 +58,14 @@ const FirestoreTest: React.FC = () => {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!checkInitialized()) return;
-
-    console.log("Creating new item:", newItem.toString());
+    console.log("Creating new item:", newItem);
     setLoading(true);
     setError(null);
     try {
       const item = { ...newItem, timestamp: new Date() };
-      console.log("Sending item to Firestore:", item.toString());
-      const docId = await FirestoreService.addDocument("test-collection", item);
+      console.log("Sending item to Firestore:", item);
+      // Use the instance
+      const docId = await firestoreService.addDocument("test-collection", item);
       console.log("Item created successfully with ID:", docId);
       setNewItem(new TestData());
       await loadData();
@@ -102,15 +77,14 @@ const FirestoreTest: React.FC = () => {
   };
 
   const handleUpdate = async (item: TestData) => {
-    if (!checkInitialized()) return;
-
-    console.log("Updating item:", item.toString());
+    console.log("Updating item:", item);
     setLoading(true);
     setError(null);
     try {
       if (!item.id) throw new Error("Item ID is required for update");
       console.log("Sending update to Firestore for item ID:", item.id);
-      await FirestoreService.updateDocument(`test-collection/${item.id}`, {
+      // Use the instance
+      await firestoreService.updateDocument(`test-collection/${item.id}`, {
         ...item,
         timestamp: new Date(),
       });
@@ -125,13 +99,12 @@ const FirestoreTest: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
-    if (!checkInitialized()) return;
-
     console.log("Deleting item with ID:", id);
     setLoading(true);
     setError(null);
     try {
-      await FirestoreService.deleteDocument(`test-collection/${id}`);
+      // Use the instance
+      await firestoreService.deleteDocument(`test-collection/${id}`);
       console.log("Item deleted successfully");
       await loadData();
     } catch (err) {
@@ -142,16 +115,15 @@ const FirestoreTest: React.FC = () => {
   };
 
   const handleGetById = async (id: string) => {
-    if (!checkInitialized()) return;
-
     console.log("Fetching item with ID:", id);
     setLoading(true);
     setError(null);
     try {
-      const item = await FirestoreService.getDocument<TestData>(
+      // Use the instance
+      const item = await firestoreService.getDocument<TestData>(
         `test-collection/${id}`
       );
-      console.log("Retrieved item:", item?.toString());
+      console.log("Retrieved item:", item);
       setSelectedItem(item);
     } catch (err) {
       console.error("Error fetching item:", err);
@@ -161,25 +133,18 @@ const FirestoreTest: React.FC = () => {
   };
 
   const handleSearch = async () => {
-    if (!checkInitialized()) return;
-
     console.log("Searching items with term:", searchTerm);
     setLoading(true);
     setError(null);
     try {
-      const items = await FirestoreService.queryCollection(
-        TestData,
+      // Use the instance
+      const items = await firestoreService.fetchCollection<TestData>(
         "test-collection",
-        {
-          where: [{ field: "name", op: "==", value: searchTerm }],
-          orderBy: [{ field: "timestamp", direction: "desc" }],
-          limit: 10,
-        }
+        where("name", "==", searchTerm),
+        orderBy("timestamp", "desc"),
+        limit(10)
       );
-      console.log(
-        `Found ${items.length} matching items:`,
-        items.map((item) => item.toString())
-      );
+      console.log(`Found ${items.length} matching items:`, items);
       setData(items);
     } catch (err) {
       console.error("Error searching items:", err);

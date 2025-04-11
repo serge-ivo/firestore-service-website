@@ -1,19 +1,28 @@
 import { initializeApp } from "firebase/app";
-import { getAnalytics } from "firebase/analytics";
-import { getFirestore, Firestore } from "firebase/firestore";
+import { Firestore, getFirestore } from "firebase/firestore";
+// Remove analytics import if you're not using it
+// import { getAnalytics } from "firebase/analytics";
+import { FirestoreService } from "@serge-ivo/firestore-client"; // Import the service
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyC-Zzci1e3Wudfg36ZoBdUEEC3evSkSQIE",
-  authDomain: "firestore-service-website.firebaseapp.com",
-  projectId: "firestore-service-website",
-  storageBucket: "firestore-service-website.firebasestorage.app",
-  messagingSenderId: "891659870829",
-  appId: "1:891659870829:web:50dd900aab03f000675564",
-  measurementId: "G-M2H5YBJS85",
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
+
+// Get Firestore instance
 export const db: Firestore = getFirestore(app);
+
+// Create and export a single FirestoreService instance
+export const firestoreService = new FirestoreService(db);
+
+// Commenting out unused analytics initialization
+// const analytics = getAnalytics(app);
